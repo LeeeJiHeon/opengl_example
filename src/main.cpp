@@ -66,7 +66,7 @@ glfwSetKeyCallback(window, OnKeyEvent);
     SPDLOG_INFO("Start main loop");
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
-        glClearColor(0.5f,0.5f,0.8f, 0.6 f);
+        glClearColor(0.5f,0.5f,0.8f,0.6f);
         glClear(GL_COLOR_BUFFER_BIT);
         glfwSwapBuffers(window);
 
