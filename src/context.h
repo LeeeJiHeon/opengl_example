@@ -20,6 +20,7 @@ private:
      VertexLayoutUPtr  m_vertexLayout;
      BufferUPtr m_vertexBuffer;
      BufferUPtr m_indexBuffer;
+     uint32_t m_texture;
 
 };
 
