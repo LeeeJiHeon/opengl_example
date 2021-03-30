@@ -31,9 +31,9 @@ void Texture::CreateTexture() {
     glGenTextures(1, &m_texture);
     // bind and set default filter and wrap option
     Bind();
-    SetFilter(GL_LINEAR, GL_LINEAR);
-    SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-}   
+    SetFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
+    SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);   
+}   // 31~35-> context.cpp 58~63
 
 void Texture::SetTextureFromImage(const Image* image) {
     GLenum format = GL_RGBA;
@@ -47,5 +47,12 @@ void Texture::SetTextureFromImage(const Image* image) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
         image->GetWidth(), image->GetHeight(), 0,
         format, GL_UNSIGNED_BYTE,
-        image->GetData());
-}
+        image->GetData());  
+        // 47~50 context.cpp의 65~67
+
+
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+
+}  
+
