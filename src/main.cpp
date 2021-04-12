@@ -6,8 +6,17 @@
 
 void OnFramebufferSizeChange(GLFWwindow* window, int width, int height) {
     SPDLOG_INFO("framebuffer size changed: ({} x {})", width, height);
-    glViewport(0, 0, width, height);
+    auto context = reinterpret_cast<Context*>(glfwGetWindowUserPointer(window));
+    context->Reshape(width, height);
 }
+
+// 캐스팅 방법
+// int i = (int)0.0f;
+// int j = static_cast<int>(0.0f)
+//dynamic_cast<>
+//const_cast<>
+//reinterpret_cast<>
+
 
 void OnKeyEvent(GLFWwindow* window,
     int key, int scancode, int action, int mods) {
@@ -22,6 +31,18 @@ void OnKeyEvent(GLFWwindow* window,
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
+}
+
+void OnCursorPos(GLFWwindow* window, double x, double y) {
+    auto context = (Context*)glfwGetWindowUserPointer(window);
+    context->MouseMove(x, y);
+}
+
+void OnMouseButton(GLFWwindow* window, int button, int action, int modifier) {
+    auto context = (Context*)glfwGetWindowUserPointer(window);
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    context->MouseButton(button, action, x, y);
 }
 
 int main(int argc, const char** argv) {
@@ -52,31 +73,37 @@ int main(int argc, const char** argv) {
     glfwMakeContextCurrent(window);
 
     // glad를 활용한 OpenGL 함수 로딩
-if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    SPDLOG_ERROR("failed to initialize glad");
-    glfwTerminate();
-    return -1;
-}
-auto glVersion = glGetString(GL_VERSION);
-SPDLOG_INFO("OpenGL context version: {}", glVersion);
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        SPDLOG_ERROR("failed to initialize glad");
+        glfwTerminate();
+        return -1;
+    }
 
-auto context = Context::Create();
-if (!context) {
-  SPDLOG_ERROR("failed to create context");
-  glfwTerminate();
-  return -1;
-}
+    auto glVersion = glGetString(GL_VERSION);
+    SPDLOG_INFO("OpenGL context version: {}", glVersion);
 
-OnFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
-glfwSetFramebufferSizeCallback (window, OnFramebufferSizeChange);
-glfwSetKeyCallback(window, OnKeyEvent);
+    auto context = Context::Create();
+    if (!context) {
+        SPDLOG_ERROR("failed to create context");
+        glfwTerminate();
+        return -1;
+    }
+    glfwSetWindowUserPointer(window, context.get());
+    auto pointer = (Context*)glfwGetWindowUserPointer(window);
+
+    OnFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
+    glfwSetFramebufferSizeCallback (window, OnFramebufferSizeChange);
+    glfwSetKeyCallback(window, OnKeyEvent);
+    glfwSetCursorPosCallback(window, OnCursorPos);
+    glfwSetMouseButtonCallback(window, OnMouseButton);
 
      // glfw 루프 실행, 윈도우 close 버튼을 누르면 정상 종료
     SPDLOG_INFO("Start main loop");
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+        context->ProcessInput(window);
         context->Render();
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(window);    
 }
     context.reset();
 
