@@ -1,2 +1,2 @@
-# ImGui가 설정된 인터렉티브 카메라입니다.
+# Phong's Illumination Model
 
