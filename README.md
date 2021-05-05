@@ -1,2 +1,2 @@
-# SpotLight / Object Loading 입니다.
+# SpotLight / Object Loading 입니다
 
