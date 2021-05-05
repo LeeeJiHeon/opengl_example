@@ -1,2 +1,2 @@
-# Phong's Illumination Model
+# SpotLight / Object Loading 입니다.
 
