@@ -25,14 +25,17 @@ private:
     bool Init();
     ProgramUPtr m_program;
     ProgramUPtr m_simpleProgram;
+    ProgramUPtr m_textureProgram;
+
 
     //  VertexLayoutUPtr  m_vertexLayout;
     //  BufferUPtr m_vertexBuffer;
     //  BufferUPtr m_indexBuffer;
     MeshUPtr m_box;
+    MeshUPtr m_plane;
     // ModelUPtr m_model;
-    TextureUPtr m_texture;
-    TextureUPtr m_texture2;
+    // TextureUPtr m_texture;
+    // TextureUPtr m_texture2;
      
      // animation
     bool m_animation { true };
@@ -64,6 +67,7 @@ private:
     MaterialPtr m_planeMaterial;
     MaterialPtr m_box1Material;
     MaterialPtr m_box2Material;
+    TexturePtr m_windowTexture;
 
     
     // camera parameter
