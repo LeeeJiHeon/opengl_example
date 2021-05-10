@@ -9,6 +9,7 @@
 #include "texture.h"
 #include "mesh.h"
 #include "model.h"
+#include "framebuffer.h"
 
 CLASS_PTR(Context)
 class Context {
@@ -25,8 +26,9 @@ private:
     bool Init();
     ProgramUPtr m_program;
     ProgramUPtr m_simpleProgram;
-    ProgramUPtr m_textureProgram;
-
+    ProgramUPtr m_textureProgram;	
+    ProgramUPtr m_postProgram;
+    float m_gamma {1.0f};
 
     //  VertexLayoutUPtr  m_vertexLayout;
     //  BufferUPtr m_vertexBuffer;
@@ -79,6 +81,9 @@ private:
     glm::vec3 m_cameraPos { glm::vec3(0.0f, 2.5f, 8.0f) };
     glm::vec3 m_cameraFront { glm::vec3(0.0f, 0.0f, -1.0f) };
     glm::vec3 m_cameraUp { glm::vec3(0.0f, 1.0f, 0.0f) };
+
+    // framebuffer
+    FramebufferUPtr m_framebuffer; 
 
     int m_width { WINDOW_WIDTH };
     int m_height { WINDOW_HEIGHT };
