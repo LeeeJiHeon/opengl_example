@@ -187,7 +187,8 @@ bool Context::Init() {
         cubeBack.get(),
     });
     m_skyboxProgram = Program::Create("./shader/skybox.vs", "./shader/skybox.fs");
-    
+    m_envMapProgram = Program::Create("./shader/env_map.vs", "./shader/env_map.fs");
+
      return true;
 }
 
@@ -357,6 +358,19 @@ void Context::Render() {
     m_box2Material->SetToProgram(m_program.get());
     m_box->Draw(m_program.get());
 
+    modelTransform =
+        glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.75f, -2.0f)) *
+        glm::rotate(glm::mat4(1.0f), glm::radians(40.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
+        glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+    m_envMapProgram->Use();
+    m_envMapProgram->SetUniform("model", modelTransform);
+    m_envMapProgram->SetUniform("view", view);
+    m_envMapProgram->SetUniform("projection", projection);
+    m_envMapProgram->SetUniform("cameraPos", m_cameraPos);
+    m_cubeTexture->Bind();
+    m_envMapProgram->SetUniform("skybox", 0);
+    m_box->Draw(m_envMapProgram.get());
+    
     // glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
     // glStencilMask(0x00);
     // glDisable(GL_DEPTH_TEST);
