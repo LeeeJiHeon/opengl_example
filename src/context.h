@@ -83,7 +83,11 @@ private:
     glm::vec3 m_cameraUp { glm::vec3(0.0f, 1.0f, 0.0f) };
 
     // framebuffer
-    FramebufferUPtr m_framebuffer; 
+    FramebufferUPtr m_framebuffer;
+
+     // cubemap
+    CubeTextureUPtr m_cubeTexture;
+    ProgramUPtr m_skyboxProgram; 
 
     int m_width { WINDOW_WIDTH };
     int m_height { WINDOW_HEIGHT };
