@@ -213,48 +213,68 @@ bool Context::Init() {
     glVertexAttribDivisor(3, 1);
     m_plane->GetIndexBuffer()->Bind();
 
+    m_shadowMap = ShadowMap::Create(1024, 1024);
+
      return true;
 }
 
 void Context::Render() {
     if (ImGui::Begin("ui window")) {             // Begin 과 End는 상을 이룸
-      if (ImGui::ColorEdit4("clear color", glm::value_ptr(m_clearColor))) {
-          glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
-      }
-      ImGui::DragFloat("gamma", &m_gamma, 0.01f, 0.0f, 2.0f);
-      ImGui::Separator();
-      ImGui::DragFloat3("camera pos", glm::value_ptr(m_cameraPos), 0.01f);
-      ImGui::DragFloat("camera yaw", &m_cameraYaw, 0.5f);
-      ImGui::DragFloat("camera pitch", &m_cameraPitch, 0.5f, -89.0f, 89.0f);
-      ImGui::Separator();
-      if (ImGui::Button("reset camera")) {
-          m_cameraYaw = 0.0f;
-          m_cameraPitch = 0.0f;
-          m_cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-      }
-      if (ImGui::CollapsingHeader("light", ImGuiTreeNodeFlags_DefaultOpen)) {
-          ImGui::DragFloat3("l.position", glm::value_ptr(m_light.position), 0.01f);
-          ImGui::DragFloat3("l.direction", glm::value_ptr(m_light.direction), 0.01f);
-          ImGui::DragFloat2("l.cutoff", glm::value_ptr(m_light.cutoff), 0.5f, 0.0f, 180.0f);
-          ImGui::DragFloat("l.distance", &m_light.distance, 0.5f, 0.0f, 3000.0f);    
-          ImGui::ColorEdit3("l.ambient", glm::value_ptr(m_light.ambient));
-          ImGui::ColorEdit3("l.diffuse", glm::value_ptr(m_light.diffuse));
-          ImGui::ColorEdit3("l.specular", glm::value_ptr(m_light.specular));
-          ImGui::Checkbox("flash Light Mode", &m_flashLightMode);
-          ImGui::Checkbox("l.blinn", &m_blinn);
-      }
- 
-      // if (ImGui::CollapsingHeader("material", ImGuiTreeNodeFlags_DefaultOpen)) {
-      //   ImGui::DragFloat("m.shininess", &m_material.shininess, 1.0f, 1.0f, 256.0f);
-      // }
+        if (ImGui::ColorEdit4("clear color", glm::value_ptr(m_clearColor))) {
+            glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
+        }
+        ImGui::DragFloat("gamma", &m_gamma, 0.01f, 0.0f, 2.0f);
+        ImGui::Separator();
+        ImGui::DragFloat3("camera pos", glm::value_ptr(m_cameraPos), 0.01f);
+        ImGui::DragFloat("camera yaw", &m_cameraYaw, 0.5f);
+        ImGui::DragFloat("camera pitch", &m_cameraPitch, 0.5f, -89.0f, 89.0f);
+        ImGui::Separator();
+        if (ImGui::Button("reset camera")) {
+            m_cameraYaw = 0.0f;
+            m_cameraPitch = 0.0f;
+            m_cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+        }
+        if (ImGui::CollapsingHeader("light", ImGuiTreeNodeFlags_DefaultOpen)) {
+            ImGui::DragFloat3("l.position", glm::value_ptr(m_light.position), 0.01f);
+            ImGui::DragFloat3("l.direction", glm::value_ptr(m_light.direction), 0.01f);
+            ImGui::DragFloat2("l.cutoff", glm::value_ptr(m_light.cutoff), 0.5f, 0.0f, 180.0f);
+            ImGui::DragFloat("l.distance", &m_light.distance, 0.5f, 0.0f, 3000.0f);    
+            ImGui::ColorEdit3("l.ambient", glm::value_ptr(m_light.ambient));
+            ImGui::ColorEdit3("l.diffuse", glm::value_ptr(m_light.diffuse));
+            ImGui::ColorEdit3("l.specular", glm::value_ptr(m_light.specular));
+            ImGui::Checkbox("flash Light Mode", &m_flashLightMode);
+            ImGui::Checkbox("l.blinn", &m_blinn);
+        }
+    
+        // if (ImGui::CollapsingHeader("material", ImGuiTreeNodeFlags_DefaultOpen)) {
+        //   ImGui::DragFloat("m.shininess", &m_material.shininess, 1.0f, 1.0f, 256.0f);
+        // }
       
-      ImGui::Checkbox("animation", &m_animation);
+        ImGui::Checkbox("animation", &m_animation);
 
-      float aspectRatio = (float)m_width / (float)m_width;
-      ImGui::Image((ImTextureID)m_framebuffer->GetColorAttachment()->Get(),
-          ImVec2(150 * aspectRatio, 150));
+        ImGui::Image((ImTextureID)m_shadowMap->GetShadowMap()->Get(),
+        ImVec2(256, 256), ImVec2(0, 1), ImVec2(1, 0));
   }
   ImGui::End();
+
+    auto lightView = glm::lookAt(m_light.position,
+        m_light.position + m_light.direction,
+        glm::vec3(0.0f, 1.0f, 0.0f));
+    auto lightProjection = glm::perspective(
+        glm::radians((m_light.cutoff[0] + m_light.cutoff[1]) * 2.0f), 
+        1.0f, 1.0f, 20.0f);
+
+    m_shadowMap->Bind();
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glViewport(0, 0,
+        m_shadowMap->GetShadowMap()->GetWidth(),
+        m_shadowMap->GetShadowMap()->GetHeight());
+    m_simpleProgram->Use();
+    m_simpleProgram->SetUniform("color", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    DrawScene(lightView, lightProjection, m_simpleProgram.get());
+
+    Framebuffer::BindToDefault();
+    glViewport(0, 0, m_width, m_height);
 
     //m_framebuffer->Bind();
 
@@ -351,40 +371,13 @@ void Context::Render() {
     // m_program->SetUniform("material.diffuse", 0);
     // m_program->SetUniform("material.specular", 1);
     // m_program->SetUniform("material.shininess", m_box1Material->shininess);
-
-    auto modelTransform =
-        glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, 0.0f)) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 1.0f, 10.0f));
-    auto transform = projection * view * modelTransform;
-    m_program->SetUniform("transform", transform);
-    m_program->SetUniform("modelTransform", modelTransform);
-    m_planeMaterial->SetToProgram(m_program.get());
-    m_box->Draw(m_program.get());
-
-    modelTransform =
-        glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.75f, -4.0f)) *
-        glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
-    transform = projection * view * modelTransform;
-    m_program->SetUniform("transform", transform);
-    m_program->SetUniform("modelTransform", modelTransform);
-    m_box1Material->SetToProgram(m_program.get());
-    m_box->Draw(m_program.get());
+            
+    DrawScene(view, projection, m_program.get());
 
     // glEnable(GL_STENCIL_TEST);
     // glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     // glStencilFunc(GL_ALWAYS, 1, 0xFF);
     // glStencilMask(0xFF);
-
-    modelTransform =
-        glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.75f, 2.0f)) *
-        glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
-    transform = projection * view * modelTransform;
-    m_program->SetUniform("transform", transform);
-    m_program->SetUniform("modelTransform", modelTransform);
-    m_box2Material->SetToProgram(m_program.get());
-    m_box->Draw(m_program.get());
 
     // glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
     // glStencilMask(0x00);
@@ -423,4 +416,49 @@ void Context::Render() {
 //     m_program->SetUniform("transform", transform);
 //     m_program->SetUniform("modelTransform", modelTransform);
 //      m_model->Draw(m_program.get());
+}
+
+void Context::DrawScene(const glm::mat4& view,
+    const glm::mat4& projection,
+    const Program* program) {
+
+    program->Use();
+    auto modelTransform =
+        glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, 0.0f)) *
+        glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 1.0f, 10.0f));
+    auto transform = projection * view * modelTransform;
+    program->SetUniform("transform", transform);
+    program->SetUniform("modelTransform", modelTransform);
+    m_planeMaterial->SetToProgram(program);
+    m_box->Draw(program);
+
+    modelTransform =
+        glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.75f, -4.0f)) *
+        glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
+        glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+    transform = projection * view * modelTransform;
+    program->SetUniform("transform", transform);
+    program->SetUniform("modelTransform", modelTransform);
+    m_box1Material->SetToProgram(program);
+    m_box->Draw(program);
+
+    modelTransform =
+        glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.75f, 2.0f)) *
+        glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
+        glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+    transform = projection * view * modelTransform;
+    program->SetUniform("transform", transform);
+    program->SetUniform("modelTransform", modelTransform);
+    m_box2Material->SetToProgram(program);
+    m_box->Draw(program);
+
+    modelTransform =
+        glm::translate(glm::mat4(1.0f), glm::vec3(3.0f, 1.75f, -2.0f)) *
+        glm::rotate(glm::mat4(1.0f), glm::radians(50.0f), glm::vec3(0.0f, 1.0f, 0.0f)) *
+        glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
+    transform = projection * view * modelTransform;
+    program->SetUniform("transform", transform);
+    program->SetUniform("modelTransform", modelTransform);
+    m_box2Material->SetToProgram(program);
+    m_box->Draw(program);
 }
