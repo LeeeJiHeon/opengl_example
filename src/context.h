@@ -57,6 +57,7 @@ private:
     };
     Light m_light;
     bool m_flashLightMode { false };
+    bool m_blinn { false };
 
     // material parameter
     // struct Material {
