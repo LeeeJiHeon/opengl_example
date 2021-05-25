@@ -1,2 +1,1 @@
-# Skymap, environment map, instancing, MSAA
-
+# Blinn Shading, Shadow Map, Normal Mapping
