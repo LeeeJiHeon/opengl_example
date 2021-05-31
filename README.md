@@ -1,1 +1,1 @@
-# Blinn Shading, Shadow Map, Normal Mapping
+# Deferred shading, SSAO
