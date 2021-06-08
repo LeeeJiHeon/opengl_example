@@ -42,21 +42,23 @@ private:
         glm::vec3 color { glm::vec3(1.0f, 1.0f, 1.0f) };
     };
     std::vector<Light> m_lights;
+    bool m_useDiffuseIrradiance { true };
     
-    // struct Material {
-    //     glm::vec3 albedo { glm::vec3(1.0f, 1.0f, 1.0f) };
-    //     float roughness { 0.5f };
-    //     float metallic { 0.5f };
-    //     float ao { 0.1f };
-    // };
     struct Material {
-        TexturePtr albedo;
-        TexturePtr roughness;
-        TexturePtr metallic;
-        TexturePtr normal;
+        glm::vec3 albedo { glm::vec3(1.0f, 1.0f, 1.0f) };
+        float roughness { 0.5f };
+        float metallic { 0.5f };
         float ao { 0.1f };
     };
     Material m_material;
+
+    TextureUPtr m_hdrMap;
+    ProgramUPtr m_sphericalMapProgram;
+    CubeTexturePtr m_hdrCubeMap;
+    ProgramUPtr m_skyboxProgram;
+    CubeTexturePtr m_diffuseIrradianceMap;
+    ProgramUPtr m_diffuseIrradianceProgram;
+
 
     // screen size
     int m_width {640};
